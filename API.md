@@ -57,14 +57,19 @@ POST /objekte/lesen/
 }
 ```
 Antwort: 
-- 200: Objekt gefunden: `Objekt`
+- 200: Objekt gefunden:
+  ```
+  {
+    objekt: Objekt
+  }
+  ```
 - 400: Falsche ID
 
 ## Mehrere Objekte Abfragen
 Alle Objekte abrufen
 Anfrage:
 ```
-POST /objekte/lesen/
+POST /objekte/auflisten/
 {
   schlüssel: string
 }
