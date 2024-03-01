@@ -14,13 +14,16 @@ import (
 const saveFile = "daten.json"
 
 type server struct {
-	lock     sync.RWMutex
+	lock     sync.Mutex
 	Accounts map[string]*account `json:"accounts"`
 	Objekte  map[int64]*objekt   `json:"objekte"`
 }
 
 func newServer() (*server, error) {
-	s := &server{}
+	s := &server{
+		Accounts: make(map[string]*account),
+		Objekte:  make(map[int64]*objekt),
+	}
 	err := s.loadData()
 	if err != nil {
 		return nil, fmt.Errorf("failed to load data: %w", err)
@@ -30,14 +33,6 @@ func newServer() (*server, error) {
 
 func (s *server) loadData() error {
 	if _, err := os.Stat(saveFile); errors.Is(err, os.ErrNotExist) {
-		file, err := os.Create(saveFile)
-		if err != nil {
-			return fmt.Errorf("failed to create save file: %w", err)
-		}
-		err = file.Close()
-		if err != nil {
-			return fmt.Errorf("failed to close file: %w", err)
-		}
 		return nil
 	}
 
@@ -45,7 +40,6 @@ func (s *server) loadData() error {
 	if err != nil {
 		return fmt.Errorf("failed to open save file: %w", err)
 	}
-
 	err = json.Unmarshal(data, s)
 	if err != nil {
 		return fmt.Errorf("failed to parse save file: %w", err)
@@ -54,24 +48,25 @@ func (s *server) loadData() error {
 }
 
 func (s *server) saveData() error {
-	file, err := os.Open(saveFile)
+	file, err := os.OpenFile(saveFile, os.O_CREATE|os.O_RDWR, 0)
 	if err != nil {
 		return fmt.Errorf("failed to open save file: %w", err)
 	}
-	defer func() {
-		err := file.Close()
-		if err != nil {
-			log.Println(err)
-		}
-	}()
-
+	err = json.NewEncoder(file).Encode(s)
+	if err != nil {
+		_ = file.Close()
+		return fmt.Errorf("failed to encode data: %w", err)
+	}
+	err = file.Close()
+	if err != nil {
+		return fmt.Errorf("failed to close file: %w", err)
+	}
 	return nil
 }
 
 func (s *server) backupData() {
 	for {
 		const delay = 30 * time.Minute
-		time.Sleep(delay)
 
 		s.lock.Lock()
 		func() {
@@ -81,6 +76,8 @@ func (s *server) backupData() {
 				log.Println(err)
 			}
 		}()
+
+		time.Sleep(delay)
 	}
 }
 
@@ -116,4 +113,15 @@ func (s *server) initRoutes() http.Handler {
 func (s *server) start() error {
 	go s.backupData()
 	return http.ListenAndServe(":8080", s.lockHandler(s.initRoutes()))
+}
+
+func main() {
+	s, err := newServer()
+	if err != nil {
+		panic(err)
+	}
+	err = s.start()
+	if err != nil {
+		panic(err)
+	}
 }

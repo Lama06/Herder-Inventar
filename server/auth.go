@@ -46,7 +46,7 @@ func generateSchlüssel() (string, error) {
 func (s *server) accountForSchlüssel(schlüssel string) *account {
 	for _, acc := range s.Accounts {
 		accSchlüssel := acc.checkSchlüssel()
-		if accSchlüssel == schlüssel {
+		if accSchlüssel != "" && accSchlüssel == schlüssel {
 			return acc
 		}
 	}
@@ -92,6 +92,7 @@ func (s *server) handleLogin(res http.ResponseWriter, req *http.Request) {
 		log.Println(err)
 		return
 	}
+	benutzer.schlüssel = schlüssel
 	benutzer.letzteAnfrage = time.Now()
 }
 
