@@ -1,10 +1,12 @@
 package main
 
 import (
+	"bytes"
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"math/big"
 	"net/http"
@@ -105,8 +107,15 @@ func (s *server) requireLogin(
 	}
 
 	return http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
+		rumpf, err := io.ReadAll(req.Body)
+		if err != nil {
+			res.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		req.Body = io.NopCloser(bytes.NewBuffer(rumpf))
+
 		var anfrageDaten anfrage
-		err := json.NewDecoder(req.Body).Decode(&anfrageDaten)
+		json.Unmarshal(rumpf, &anfrageDaten)
 		if err != nil {
 			res.WriteHeader(http.StatusBadRequest)
 			return

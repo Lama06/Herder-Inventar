@@ -10,7 +10,7 @@ import (
 )
 
 type objekt struct {
-	Id       int64     `json:"id"`
+	Id       int32     `json:"id"`
 	Name     string    `json:"name"`
 	Raum     string    `json:"raum"`
 	Probleme []problem `json:"probleme"`
@@ -25,7 +25,7 @@ type problem struct {
 
 func (s *server) handleObjekteLesen(res http.ResponseWriter, req *http.Request) {
 	type anfrage struct {
-		Id int64
+		Id int32
 	}
 
 	var anfrageDaten anfrage
@@ -71,10 +71,10 @@ func (s *server) handleObjekteAuflisten(res http.ResponseWriter, req *http.Reque
 
 func (s *server) handleObjektErstellen(res http.ResponseWriter, req *http.Request, admin *account) {
 	type antwort struct {
-		Id int64 `json:"id"`
+		Id int32 `json:"id"`
 	}
 
-	neueId := rand.Int64()
+	neueId := rand.Int32()
 	s.Objekte[neueId] = &objekt{
 		Id:   neueId,
 		Name: "Neu Erstellt",
@@ -91,7 +91,7 @@ func (s *server) handleObjektErstellen(res http.ResponseWriter, req *http.Reques
 
 func (s *server) handleObjektLöschen(res http.ResponseWriter, req *http.Request, admin *account) {
 	type anfrage struct {
-		Id int64
+		Id int32
 	}
 
 	var anfrageDaten anfrage
@@ -109,7 +109,7 @@ func (s *server) handleObjektLöschen(res http.ResponseWriter, req *http.Request
 
 func (s *server) handleObjektÄndern(res http.ResponseWriter, req *http.Request, admin *account) {
 	type anfrage struct {
-		Id   int64
+		Id   int32
 		Name string
 		Raum string
 	}
@@ -131,7 +131,7 @@ func (s *server) handleObjektÄndern(res http.ResponseWriter, req *http.Request,
 
 func (s *server) handleProblemMelden(res http.ResponseWriter, req *http.Request, acc *account) {
 	type anfrage struct {
-		Id           int64
+		Id           int32
 		Beschreibung string
 	}
 
@@ -156,7 +156,7 @@ func (s *server) handleProblemMelden(res http.ResponseWriter, req *http.Request,
 
 func (s *server) handleProblemLösen(res http.ResponseWriter, req *http.Request, admin *account) {
 	type anfrage struct {
-		Id      int64
+		Id      int32
 		Problem int64
 	}
 
