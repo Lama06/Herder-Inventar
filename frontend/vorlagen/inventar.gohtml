@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Inventar</title>
+</head>
+<body>
+<h1>Inventar</h1>
+
+<h2>Objekt hinzufügen</h2>
+<form method="post" action="/objekte/erstellen/">
+    <label for="name">Name: </label>
+    <input name="name" id="name" type="text">
+    <br>
+    <label for="raum">Raun: </label>
+    <input id="raum" name="raum" type="text">
+    <br>
+    <input type="submit" value="Absenden">
+</form>
+
+{{ range .Objekte }}
+<div>
+    <h2 title="{{ .Id }}">{{ .Name }}</h2>
+    {{ if len .Probleme }} <h3>Es liegen Probleme vor!</h3> {{ end }}
+    <a href="/objekte/{{ .Id }}/">Öffnen</a>
+    <br>
+    <a href="/objekte/{{ .Id }}/loeschen/">Löschen</a>
+</div>
+{{ end }}
+
+</body>
+</html>

@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ .Obj.Name }}</title>
+</head>
+<body>
+
+<h1>Objekt: {{ .Obj.Name }}</h1>
+
+<section>
+    <h2>Informationen</h2>
+    Raum: {{ .Obj.Raum }}
+</section>
+
+<section>
+    <h2>Melden eines Problemes</h2>
+    {{ if .Angemeldet }}
+        Hinweis: Überprüfen Sie bitte unten, ob das Problem, das Sie melden wollen, bereits bekannt ist.
+        <form method="post" action="/objekte/{{ .Obj.Id }}/probleme/melden/">
+            <label for="beschreibung">Beschreibung des Problemes:</label>
+            <textarea name="beschreibung" id="beschreibung"></textarea>
+            <br>
+            <input type="submit" value="Absenden">
+        </form>
+    {{ else }}
+        Melden Sie sich bitte an, um ein Problem melden zu können.
+        <a href="/anmelden/?weiterleitung=/objekte/{{ .Obj.Id }}/">Zu der Anmeldung</a>
+    {{ end }}
+</section>
+
+<section>
+    <h2>Bekannte Probleme</h2>
+    {{ range .Obj.Probleme }}
+        <div class="problem" data-id="{{ .Id }}">
+            <h3 title="{{ .Id }}">Problem</h3>
+            Beschreibung: {{ .Beschreibung }}
+            <br>
+            Ersteller: {{ .Ersteller }}
+            <br>
+            Datum: {{ .Datum }}
+            {{ if $.Admin }}
+                <a href="/objekte/{{ $.Obj.Id }}/probleme/{{ .Id }}/loesen/">Problem lösen</a>
+            {{ end }}
+        </div>
+    {{ end }}
+</section>
+
+</body>
+</html>

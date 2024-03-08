@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Anmelden</title>
+</head>
+<body>
+<h1>Anmelden</h1>
+{{ if .Fehler }}
+Die angegebenen Anmeldedaten sind inkorrekt. Bitte versuchen Sie es erneut.
+{{ end }}
+<form
+        action="/anmelden/{{ if .Weiterleitung }}?weiterleitung={{ .Weiterleitung }}{{ end }}"
+        method="post"
+>
+    <label for="benutzername">Benutzername: </label>
+    <input type="text" id="benutzername" name="benutzername">
+
+    <br>
+
+    <label for="passwort">Passwort:</label>
+    <input type="password" id="passwort" name="passwort">
+
+    <input type="submit" value="Absenden">
+</form>
+Sollten Sie Ihr Passwort vergessen haben, wenden Sie sich bitte an einen Administrator.
+</body>
+</html>
