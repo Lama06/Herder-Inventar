@@ -3,6 +3,8 @@
 <html>
 <head>
     <title>Anmelden</title>
+
+    {{ template "bibliotheken" }}
 </head>
 <body>
 <h1>Anmelden</h1>
@@ -13,15 +15,17 @@ Die angegebenen Anmeldedaten sind inkorrekt. Bitte versuchen Sie es erneut.
         action="/anmelden/{{ if .Weiterleitung }}?weiterleitung={{ .Weiterleitung }}{{ end }}"
         method="post"
 >
-    <label for="benutzername">Benutzername: </label>
-    <input type="text" id="benutzername" name="benutzername">
+    <div class="mb-3">
+        <label class="form-label" for="benutzername">Benutzername: </label>
+        <input class="form-control" type="text" id="benutzername" name="benutzername">
+    </div>
 
-    <br>
+    <div class="mb-3">
+        <label class="form-label" for="passwort">Passwort:</label>
+        <input class="form-control" type="password" id="passwort" name="passwort">
+    </div>
 
-    <label for="passwort">Passwort:</label>
-    <input type="password" id="passwort" name="passwort">
-
-    <input type="submit" value="Absenden">
+    <button type="submit" class="btn btn-primary">Anmelden</button>
 </form>
 Sollten Sie Ihr Passwort vergessen haben, wenden Sie sich bitte an einen Administrator.
 </body>

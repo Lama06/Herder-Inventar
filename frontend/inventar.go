@@ -110,7 +110,7 @@ type objektVorlageDaten struct {
 }
 
 func handleObjekt(db *modell.Datenbank) http.Handler {
-	return requireLoginSoft(db, requireObjekt(db, "objekt", http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
+	return requireLoginWeich(db, requireObjekt(db, "objekt", http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
 		benutzer, _ := req.Context().Value(ctxKeyBenutzer).(*modell.Benutzer)
 		obj := req.Context().Value(ctxKeyObjekt).(*modell.Objekt)
 		var antwort bytes.Buffer

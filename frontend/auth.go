@@ -71,6 +71,7 @@ func handleAnmeldenPost(db *modell.Datenbank) http.Handler {
 			Benutzer:      benutzername,
 			LetzerZugriff: time.Now(),
 		}
+		go auth.SitzungSanduhr(db, schlüssel)
 
 		http.SetCookie(res, &http.Cookie{
 			Name:     "schluessel",
@@ -132,7 +133,7 @@ func requireLogin(
 	})
 }
 
-func requireLoginSoft(db *modell.Datenbank, danach http.Handler) http.Handler {
+func requireLoginWeich(db *modell.Datenbank, danach http.Handler) http.Handler {
 	return http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
 		schlüsselKeks, err := req.Cookie("schluessel")
 		if err != nil {
