@@ -17,6 +17,27 @@
 </section>
 
 <section>
+    <h2>Bearbeiten</h2>
+    {{ if .Admin }}
+        <form method="post" action="/objekte/{{ .Obj.Id }}/bearbeiten/">
+            <label for="name">Name: </label>
+            <input id="name" name="name" type="text" value="{{ .Obj.Name }}">
+            <br>
+            <label for="raum">Raum: </label>
+            <input id="raum" name="raum" type="text" value="{{ .Obj.Raum }}">
+            <br>
+            <input type="submit" value="Absenden">
+        </form>
+    {{ else if .Angemeldet }}
+        Nur Admins sind dazu berechtigt, Objekte zu bearbeiten.
+    {{ else }}
+        Bitte melden Sie sich mit einem Admin-Account an, um Bearbeitungen vorzunehmen:
+        <br>
+        <a href="/anmelden/?weiterleitung=/objekte/{{ .Obj.Id }}/">Zu der Anmeldung</a>
+    {{ end }}
+</section>
+
+<section>
     <h2>Melden eines Problemes</h2>
     {{ if .Angemeldet }}
         Hinweis: Überprüfen Sie bitte unten, ob das Problem, das Sie melden wollen, bereits bekannt ist.
@@ -28,6 +49,7 @@
         </form>
     {{ else }}
         Melden Sie sich bitte an, um ein Problem melden zu können.
+            <br>
         <a href="/anmelden/?weiterleitung=/objekte/{{ .Obj.Id }}/">Zu der Anmeldung</a>
     {{ end }}
 </section>
@@ -35,7 +57,7 @@
 <section>
     <h2>Bekannte Probleme</h2>
     {{ range .Obj.Probleme }}
-        <div class="problem" data-id="{{ .Id }}">
+        <div class="problem">
             <h3 title="{{ .Id }}">Problem</h3>
             Beschreibung: {{ .Beschreibung }}
             <br>
@@ -43,6 +65,7 @@
             <br>
             Datum: {{ .Datum }}
             {{ if $.Admin }}
+                <br>
                 <a href="/objekte/{{ $.Obj.Id }}/probleme/{{ .Id }}/loesen/">Problem lösen</a>
             {{ end }}
         </div>

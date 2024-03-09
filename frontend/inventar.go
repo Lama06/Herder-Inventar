@@ -132,6 +132,24 @@ func handleObjekt(db *modell.Datenbank) http.Handler {
 	})))
 }
 
+func handleObjektBearbeiten(db *modell.Datenbank) http.Handler {
+	return requireLogin(
+		db, true,
+		requireObjekt(db, "objekt", http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
+			obj := req.Context().Value(ctxKeyObjekt).(*modell.Objekt)
+			err := req.ParseForm()
+			if err != nil || !req.Form.Has("name") || !req.Form.Has("raum") {
+				res.WriteHeader(http.StatusBadRequest)
+				return
+			}
+			name, raum := req.Form.Get("name"), req.Form.Get("raum")
+			obj.Name = name
+			obj.Raum = raum
+			http.Redirect(res, req, fmt.Sprintf("/objekte/%v/", obj.Id), http.StatusFound)
+		})),
+	)
+}
+
 func handleProblemMelden(db *modell.Datenbank) http.Handler {
 	return requireLogin(
 		db, false,
