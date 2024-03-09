@@ -12,6 +12,7 @@ const (
 	ctxKeyBenutzer contextKey = iota
 	ctxKeyObjekt
 	ctxKeyProblem
+	ctxKeyAccount
 )
 
 func New(db *modell.Datenbank) http.Handler {
@@ -20,12 +21,17 @@ func New(db *modell.Datenbank) http.Handler {
 	mux.Handle("GET /anmelden/{$}", handleAnmeldenGet())
 	mux.Handle("POST /anmelden/{$}", handleAnmeldenPost(db))
 
+	mux.Handle("GET /accounts/{$}", handleAccounts(db))
+	mux.Handle("POST /accounts/registrieren/{$}", handleAccountRegistrieren(db))
+	mux.Handle("POST /accounts/{account}/passwort_aendern/{$}", handlePasswortÄndern(db))
+	mux.Handle("GET /accounts/{account}/loeschen/{$}", handleAccountLöschen(db))
+
 	mux.Handle("GET /objekte/{$}", handleInventarListe(db))
 	mux.Handle("POST /objekte/erstellen/{$}", handleObjektErstellen(db))
 	mux.Handle("GET /objekte/{objekt}/{$}", handleObjekt(db))
 	mux.Handle("GET /objekte/{objekt}/loeschen/{$}", handleObjektLöschen(db))
 	mux.Handle("POST /objekte/{objekt}/probleme/melden/{$}", handleProblemMelden(db))
-	mux.Handle("GET /objekte/{objekt}/probleme/{problem}/loesen/", handleProblemLösen(db))
+	mux.Handle("GET /objekte/{objekt}/probleme/{problem}/loesen/{$}", handleProblemLösen(db))
 
 	return http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
 		db.Lock.Lock()

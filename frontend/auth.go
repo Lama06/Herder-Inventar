@@ -119,7 +119,7 @@ func requireLogin(
 			return
 		}
 		if admin && !benutzer.Admin {
-			res.WriteHeader(http.StatusFound)
+			res.WriteHeader(http.StatusUnauthorized)
 			return
 		}
 		req = req.WithContext(context.WithValue(req.Context(), ctxKeyBenutzer, benutzer))
@@ -147,4 +147,89 @@ func requireLoginSoft(db *modell.Datenbank, danach http.Handler) http.Handler {
 		req = req.WithContext(context.WithValue(req.Context(), ctxKeyBenutzer, benutzer))
 		danach.ServeHTTP(res, req)
 	})
+}
+
+func requireAccount(db *modell.Datenbank, pfadKomponente string, danach http.Handler) http.Handler {
+	return http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
+		benutzername := req.PathValue(pfadKomponente)
+		benutzer, ok := db.Accounts[benutzername]
+		if !ok {
+			res.WriteHeader(http.StatusNotFound)
+			return
+		}
+		req = req.WithContext(context.WithValue(req.Context(), ctxKeyAccount, benutzer))
+		danach.ServeHTTP(res, req)
+	})
+}
+
+var (
+	//go:embed vorlagen/accounts.gohtml
+	accountsVorlageRoh string
+	accountsVorlage    = template.Must(template.New("accounts").Parse(accountsVorlageRoh))
+)
+
+func handleAccounts(db *modell.Datenbank) http.Handler {
+	return requireLogin(db, true, http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
+		var antwort bytes.Buffer
+		err := accountsVorlage.Execute(&antwort, db)
+		if err != nil {
+			log.Println(err)
+			res.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		_, _ = antwort.WriteTo(res)
+	}))
+}
+
+func handleAccountRegistrieren(db *modell.Datenbank) http.Handler {
+	return requireLogin(db, true, http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
+		err := req.ParseForm()
+		if err != nil || !req.Form.Has("benutzername") || !req.Form.Has("passwort") {
+			res.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		benutzername := req.Form.Get("benutzername")
+		passwort := req.Form.Get("passwort")
+		admin := req.Form.Has("admin")
+		if _, schonVorhanden := db.Accounts[benutzername]; schonVorhanden {
+			res.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		acc := modell.Benutzer{
+			Name:     benutzername,
+			Admin:    admin,
+			Passwort: sha256.Sum256([]byte(passwort)),
+		}
+		db.Accounts[benutzername] = &acc
+		http.Redirect(res, req, "/accounts/", http.StatusFound)
+	}))
+}
+
+func handleAccountLöschen(db *modell.Datenbank) http.Handler {
+	return requireLogin(
+		db, true,
+		requireAccount(db, "account", http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
+			account := req.Context().Value(ctxKeyAccount).(*modell.Benutzer)
+			delete(db.Accounts, account.Name)
+			http.Redirect(res, req, "/accounts/", http.StatusFound)
+		})),
+	)
+}
+
+func handlePasswortÄndern(db *modell.Datenbank) http.Handler {
+	return requireLogin(
+		db, true,
+		requireAccount(db, "account", http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
+			err := req.ParseForm()
+			if err != nil || !req.Form.Has("passwort") {
+				res.WriteHeader(http.StatusBadRequest)
+				return
+			}
+			passwort := req.Form.Get("passwort")
+
+			account := req.Context().Value(ctxKeyAccount).(*modell.Benutzer)
+			account.Passwort = sha256.Sum256([]byte(passwort))
+			http.Redirect(res, req, "/accounts/", http.StatusFound)
+		})),
+	)
 }

@@ -5,6 +5,10 @@
 </head>
 <body>
 
+{{ if .Admin }}
+<a href="/objekte/">Liste aller Objekte</a>
+{{ end }}
+
 <h1>Objekt: {{ .Obj.Name }}</h1>
 
 <section>

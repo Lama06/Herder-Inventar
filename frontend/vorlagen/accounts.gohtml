@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Accounts</title>
+</head>
+<body>
+<h1>Accounts</h1>
+
+<h2>Neuen Account registrieren</h2>
+<form method="post" action="/accounts/registrieren/">
+    <label for="benutzername">Benutzername: </label>
+    <input name="benutzername" id="benutzername" type="text">
+    <br>
+    <label for="passwort">Passwort: </label>
+    <input id="passwort" name="passwort" type="text">
+    <br>
+    <label for="admin">Admin: </label>
+    <input id="admin" name="admin" type="checkbox">
+    <br>
+    <input type="submit" value="Absenden">
+</form>
+
+{{ range .Accounts }}
+    <div>
+        <h2>{{ .Name }}</h2>
+        Admin: {{ if .Admin }} Ja {{ else }} Nein {{end}}
+        <a href="/accounts/{{ .Name }}/loeschen">Account löschen</a>
+        <h3>Passwort ändern:</h3>
+        <form method="post" action="/accounts/{{ .Name }}/passwort_aendern/">
+            <label for="passwort-{{ .Name }}">Neues Passwort: </label>
+            <input id="passwort-{{ .Name }}" name="passwort" type="text">
+            <br>
+            <input type="submit" value="Absenden">
+        </form>
+    </div>
+{{ end }}
+
+</body>
+</html>
