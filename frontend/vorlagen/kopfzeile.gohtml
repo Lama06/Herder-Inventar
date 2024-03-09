@@ -1,0 +1,15 @@
+{{ define "kopfzeile" }}
+    <ul>
+        {{ if .Angemeldet }}
+            <li>Account: {{ .Benutzername }}</li>
+            <li><a href="/abmelden/">Abmelden</a></li>
+        {{ else }}
+            <li>Nicht angemeldet</li>
+            <li><a href="/anmelden/">Anmelden</a></li>
+        {{ end }}
+        {{ if .Admin }}
+           <li><a href="/accounts/">Accounts verwalten</a></li>
+          <li><a href="/objekte/">Objekte verwalten</a></li>
+        {{ end }}
+    </ul>
+{{ end }}

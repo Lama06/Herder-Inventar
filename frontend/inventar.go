@@ -5,7 +5,6 @@ import (
 	"context"
 	_ "embed"
 	"fmt"
-	"html/template"
 	"log"
 	"math/rand/v2"
 	"net/http"
@@ -52,16 +51,19 @@ func requireProblem(pfadKomponente string, danach http.Handler) http.Handler {
 	})
 }
 
-var (
-	//go:embed vorlagen/inventar.gohtml
-	inventarVorlageRoh string
-	inventarVorlage    = template.Must(template.New("inventar").Parse(inventarVorlageRoh))
-)
+type inventarVorlageDaten struct {
+	kopfzeileVorlageDaten
+	Objekte map[int32]*modell.Objekt
+}
 
 func handleInventarListe(db *modell.Datenbank) http.Handler {
 	return requireLogin(db, true, http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
+		benutzer := req.Context().Value(ctxKeyBenutzer).(*modell.Benutzer)
 		var antwort bytes.Buffer
-		err := inventarVorlage.Execute(&antwort, db)
+		err := vorlage.ExecuteTemplate(&antwort, "inventar", inventarVorlageDaten{
+			kopfzeileVorlageDaten: newKopfzeileVorlageDaten(benutzer),
+			Objekte:               db.Objekte,
+		})
 		if err != nil {
 			log.Println(err)
 			res.WriteHeader(http.StatusInternalServerError)
@@ -102,26 +104,19 @@ func handleObjektLöschen(db *modell.Datenbank) http.Handler {
 	)
 }
 
-var (
-	//go:embed vorlagen/objekt.gohtml
-	objektVorlageRoh string
-	objektVorlage    = template.Must(template.New("objekt").Parse(objektVorlageRoh))
-)
-
 type objektVorlageDaten struct {
-	Obj               *modell.Objekt
-	Angemeldet, Admin bool
+	kopfzeileVorlageDaten
+	Obj *modell.Objekt
 }
 
 func handleObjekt(db *modell.Datenbank) http.Handler {
 	return requireLoginSoft(db, requireObjekt(db, "objekt", http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
-		benutzer, angemeldet := req.Context().Value(ctxKeyBenutzer).(*modell.Benutzer)
+		benutzer, _ := req.Context().Value(ctxKeyBenutzer).(*modell.Benutzer)
 		obj := req.Context().Value(ctxKeyObjekt).(*modell.Objekt)
 		var antwort bytes.Buffer
-		err := objektVorlage.Execute(&antwort, objektVorlageDaten{
-			Obj:        obj,
-			Angemeldet: angemeldet,
-			Admin:      angemeldet && benutzer.Admin,
+		err := vorlage.ExecuteTemplate(&antwort, "objekt", objektVorlageDaten{
+			kopfzeileVorlageDaten: newKopfzeileVorlageDaten(benutzer),
+			Obj:                   obj,
 		})
 		if err != nil {
 			log.Println(err)

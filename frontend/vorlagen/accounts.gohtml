@@ -1,9 +1,13 @@
+{{ define "accounts" }}
 <!DOCTYPE html>
 <html>
 <head>
     <title>Accounts</title>
 </head>
 <body>
+
+{{ template "kopfzeile" . }}
+
 <h1>Accounts</h1>
 
 <h2>Neuen Account registrieren</h2>
@@ -24,6 +28,7 @@
     <div>
         <h2>{{ .Name }}</h2>
         Admin: {{ if .Admin }} Ja {{ else }} Nein {{end}}
+        <br>
         <a href="/accounts/{{ .Name }}/loeschen">Account löschen</a>
         <h3>Passwort ändern:</h3>
         <form method="post" action="/accounts/{{ .Name }}/passwort_aendern/">
@@ -37,3 +42,4 @@
 
 </body>
 </html>
+{{end}}

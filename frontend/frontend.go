@@ -1,10 +1,34 @@
 package frontend
 
 import (
+	"embed"
+	"html/template"
 	"net/http"
 
 	"github.com/Lama06/Herder-Inventar/modell"
 )
+
+var (
+	//go:embed vorlagen/***
+	vorlagenDateien embed.FS
+	vorlage         = template.Must(template.ParseFS(vorlagenDateien, "vorlagen/***"))
+)
+
+type kopfzeileVorlageDaten struct {
+	Admin, Angemeldet bool
+	Benutzername      string
+}
+
+func newKopfzeileVorlageDaten(benutzer *modell.Benutzer) kopfzeileVorlageDaten {
+	if benutzer == nil {
+		return kopfzeileVorlageDaten{}
+	}
+	return kopfzeileVorlageDaten{
+		Admin:        benutzer.Admin,
+		Angemeldet:   true,
+		Benutzername: benutzer.Name,
+	}
+}
 
 type contextKey int
 
@@ -20,6 +44,7 @@ func New(db *modell.Datenbank) http.Handler {
 
 	mux.Handle("GET /anmelden/{$}", handleAnmeldenGet())
 	mux.Handle("POST /anmelden/{$}", handleAnmeldenPost(db))
+	mux.Handle("GET /abmelden/{$}", handleAbmelden(db))
 
 	mux.Handle("GET /accounts/{$}", handleAccounts(db))
 	mux.Handle("POST /accounts/registrieren/{$}", handleAccountRegistrieren(db))

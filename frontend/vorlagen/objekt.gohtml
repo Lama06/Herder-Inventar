@@ -1,3 +1,4 @@
+{{ define "objekt" }}
 <!DOCTYPE html>
 <html>
 <head>
@@ -5,9 +6,7 @@
 </head>
 <body>
 
-{{ if .Admin }}
-<a href="/objekte/">Liste aller Objekte</a>
-{{ end }}
+{{ template "kopfzeile" . }}
 
 <h1>Objekt: {{ .Obj.Name }}</h1>
 
@@ -74,3 +73,4 @@
 
 </body>
 </html>
+{{ end }}

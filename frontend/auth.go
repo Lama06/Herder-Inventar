@@ -5,19 +5,12 @@ import (
 	"context"
 	"crypto/sha256"
 	_ "embed"
-	"html/template"
 	"log"
 	"net/http"
 	"time"
 
 	"github.com/Lama06/Herder-Inventar/auth"
 	"github.com/Lama06/Herder-Inventar/modell"
-)
-
-var (
-	//go:embed vorlagen/anmelden.gohtml
-	anmeldenVorlageRoh string
-	anmeldenVorlage    = template.Must(template.New("anmelden").Parse(anmeldenVorlageRoh))
 )
 
 type anmeldenVorlageDaten struct {
@@ -34,7 +27,7 @@ func handleAnmeldenGet() http.Handler {
 		}
 
 		var antwort bytes.Buffer
-		err = anmeldenVorlage.Execute(&antwort, anmeldenVorlageDaten{
+		err = vorlage.ExecuteTemplate(&antwort, "anmelden", anmeldenVorlageDaten{
 			Fehler:        false,
 			Weiterleitung: req.Form.Get("weiterleitung"),
 		})
@@ -59,7 +52,7 @@ func handleAnmeldenPost(db *modell.Datenbank) http.Handler {
 		benutzer, ok := db.Accounts[benutzername]
 		if !ok || passwortHash != benutzer.Passwort {
 			res.WriteHeader(http.StatusUnauthorized)
-			err := anmeldenVorlage.Execute(res, anmeldenVorlageDaten{Fehler: true})
+			err := vorlage.ExecuteTemplate(res, "anmelden", anmeldenVorlageDaten{Fehler: true})
 			if err != nil {
 				log.Println(err)
 				return
@@ -94,6 +87,18 @@ func handleAnmeldenPost(db *modell.Datenbank) http.Handler {
 		}
 		http.Redirect(res, req, "/objekte/", http.StatusFound)
 	})
+}
+
+func handleAbmelden(db *modell.Datenbank) http.Handler {
+	return requireLogin(db, false, http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
+		benutzer := req.Context().Value(ctxKeyBenutzer).(*modell.Benutzer)
+		for schlüssel, sitzung := range db.Sitzungen {
+			if sitzung.Benutzer == benutzer.Name {
+				delete(db.Sitzungen, schlüssel)
+			}
+		}
+		http.Redirect(res, req, "/anmelden/", http.StatusFound)
+	}))
 }
 
 func requireLogin(
@@ -162,16 +167,19 @@ func requireAccount(db *modell.Datenbank, pfadKomponente string, danach http.Han
 	})
 }
 
-var (
-	//go:embed vorlagen/accounts.gohtml
-	accountsVorlageRoh string
-	accountsVorlage    = template.Must(template.New("accounts").Parse(accountsVorlageRoh))
-)
+type accountsVorlageDaten struct {
+	kopfzeileVorlageDaten
+	Accounts map[string]*modell.Benutzer
+}
 
 func handleAccounts(db *modell.Datenbank) http.Handler {
 	return requireLogin(db, true, http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
+		benutzer := req.Context().Value(ctxKeyBenutzer).(*modell.Benutzer)
 		var antwort bytes.Buffer
-		err := accountsVorlage.Execute(&antwort, db)
+		err := vorlage.ExecuteTemplate(&antwort, "accounts", accountsVorlageDaten{
+			kopfzeileVorlageDaten: newKopfzeileVorlageDaten(benutzer),
+			Accounts:              db.Accounts,
+		})
 		if err != nil {
 			log.Println(err)
 			res.WriteHeader(http.StatusInternalServerError)
