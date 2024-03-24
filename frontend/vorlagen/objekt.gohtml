@@ -12,50 +12,50 @@
 
 <h1>Objekt: {{ .Obj.Name }}</h1>
 
-<section>
+<div>
     <h2>Informationen</h2>
     Raum: {{ .Obj.Raum }}
-</section>
+</div>
 
-<section>
+<div>
     <h2>Bearbeiten</h2>
     {{ if .Admin }}
-        <form method="post" action="/objekte/{{ .Obj.Id }}/bearbeiten/">
+        <form class="pure-form pure-form-stacked" method="post" action="/objekt/{{ .Obj.Id }}/bearbeiten/">
             <label for="name">Name: </label>
             <input id="name" name="name" type="text" value="{{ .Obj.Name }}">
-            <br>
+
             <label for="raum">Raum: </label>
             <input id="raum" name="raum" type="text" value="{{ .Obj.Raum }}">
-            <br>
-            <input type="submit" value="Absenden">
+
+            <button class="pure-button pure-button-primary" type="submit">Absenden</button>
         </form>
+        <br>
+        <a class="pure-button button-error" href="/objekt/{{ .Obj.Id }}/loeschen/">Objekt Löschen</a>
     {{ else if .Angemeldet }}
         Nur Admins sind dazu berechtigt, Objekte zu bearbeiten.
     {{ else }}
         Bitte melden Sie sich mit einem Admin-Account an, um Bearbeitungen vorzunehmen:
-        <br>
-        <a href="/anmelden/?weiterleitung=/objekte/{{ .Obj.Id }}/">Zu der Anmeldung</a>
+        <a class="pure-button pure-button-primary" href="/anmelden/?weiterleitung=/objekt/{{ .Obj.Id }}/">Zu der Anmeldung</a>
     {{ end }}
-</section>
+</div>
 
-<section>
+<div>
     <h2>Melden eines Problemes</h2>
     {{ if .Angemeldet }}
         Hinweis: Überprüfen Sie bitte unten, ob das Problem, das Sie melden wollen, bereits bekannt ist.
-        <form method="post" action="/objekte/{{ .Obj.Id }}/probleme/melden/">
+        <form class="pure-form pure-form-stacked" method="post" action="/objekt/{{ .Obj.Id }}/probleme/melden/">
             <label for="beschreibung">Beschreibung des Problemes:</label>
             <textarea name="beschreibung" id="beschreibung"></textarea>
-            <br>
-            <input type="submit" value="Absenden">
+
+            <button class="pure-button pure-button-primary" type="submit">Absenden</button>
         </form>
     {{ else }}
         Melden Sie sich bitte an, um ein Problem melden zu können.
-            <br>
-        <a href="/anmelden/?weiterleitung=/objekte/{{ .Obj.Id }}/">Zu der Anmeldung</a>
+        <a class="pure-button pure-button-primary" href="/anmelden/?weiterleitung=/objekt/{{ .Obj.Id }}/">Zu der Anmeldung</a>
     {{ end }}
-</section>
+</div>
 
-<section>
+<div>
     <h2>Bekannte Probleme</h2>
     {{ range .Obj.Probleme }}
         <div class="problem">
@@ -67,11 +67,11 @@
             Datum: {{ .Datum }}
             {{ if $.Admin }}
                 <br>
-                <a href="/objekte/{{ $.Obj.Id }}/probleme/{{ .Id }}/loesen/">Problem lösen</a>
+                <a class="pure-button pure-button-primary" href="/objekt/{{ $.Obj.Id }}/probleme/{{ .Id }}/loesen/">Problem lösen</a>
             {{ end }}
         </div>
     {{ end }}
-</section>
+</div>
 
 </body>
 </html>

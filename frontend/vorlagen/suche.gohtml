@@ -1,0 +1,40 @@
+{{ define "suche" }}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Suche</title>
+
+    {{ template "bibliotheken" }}
+</head>
+<body>
+
+{{ template "kopfzeile" . }}
+
+<h1>Suchergebnisse</h1>
+
+<a class="pure-button button-error" href="/objekte/">Suche schließen</a>
+
+<div>
+    <h2>Erneut Suchen</h2>
+    <form class="pure-form pure-form-stacked" method="post" action="/objekte/suche/">
+        <label for="suche">Suchbegriff: </label>
+        <input type="text" id="suche" name="suche" value="{{ .Suche }}">
+        <button class="pure-button pure-button-primary" type="submit" value="Absenden">Suche starten</button>
+    </form>
+</div>
+
+<div>
+    <h2>Objekte</h2>
+    {{ range .Objekte }}
+        <div>
+            <h3 title="{{ .Id }}">{{ .Name }}</h3>
+            {{ if len .Probleme }} <h4>Es liegen Probleme vor!</h4> {{ end }}
+            <a class="pure-button pure-button-primary" href="/objekt/{{ .Id }}/">Öffnen</a>
+            <a class="pure-button button-error" href="/objekt/{{ .Id }}/loeschen/">Löschen</a>
+        </div>
+    {{ end }}
+</div>
+
+</body>
+</html>
+{{ end }}

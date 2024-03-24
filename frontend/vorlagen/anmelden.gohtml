@@ -7,27 +7,31 @@
     {{ template "bibliotheken" }}
 </head>
 <body>
-<h1>Anmelden</h1>
-{{ if .Fehler }}
-Die angegebenen Anmeldedaten sind inkorrekt. Bitte versuchen Sie es erneut.
-{{ end }}
+
 <form
+        class="pure-form pure-form-stacked"
         action="/anmelden/{{ if .Weiterleitung }}?weiterleitung={{ .Weiterleitung }}{{ end }}"
         method="post"
 >
-    <div class="mb-3">
-        <label class="form-label" for="benutzername">Benutzername: </label>
-        <input class="form-control" type="text" id="benutzername" name="benutzername">
-    </div>
+    <fieldset>
+        <legend>Anmelden</legend>
+        <label for="benutzername">Benutzername</label>
+        <input type="text" id="benutzername" name="benutzername" placeholder="Benutzername">
 
-    <div class="mb-3">
-        <label class="form-label" for="passwort">Passwort:</label>
-        <input class="form-control" type="password" id="passwort" name="passwort">
-    </div>
+        <label for="passwort">Passwort</label>
+        <input type="password" id="passwort" name="passwort" placeholder="Passwort">
 
-    <button type="submit" class="btn btn-primary">Anmelden</button>
+        {{ if .Fehler }}
+            <span class="pure-form-message">
+                Die angegebenen Anmeldedaten sind inkorrekt. Bitte versuchen Sie es erneut.
+                Sollten Sie Ihr Passwort vergessen haben, wenden Sie sich bitte an einen Administrator.
+            </span>
+        {{ end }}
+
+        <button type="submit" class="pure-button pure-button-primary">Anmelden</button>
+    </fieldset>
 </form>
-Sollten Sie Ihr Passwort vergessen haben, wenden Sie sich bitte an einen Administrator.
+
 </body>
 </html>
 {{ end }}

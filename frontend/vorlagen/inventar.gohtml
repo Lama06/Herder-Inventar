@@ -12,26 +12,66 @@
 
 <h1>Inventar</h1>
 
-<h2>Objekt hinzufügen</h2>
-<form method="post" action="/objekte/erstellen/">
-    <label for="name">Name: </label>
-    <input name="name" id="name" type="text">
-    <br>
-    <label for="raum">Raun: </label>
-    <input id="raum" name="raum" type="text">
-    <br>
-    <input type="submit" value="Absenden">
-</form>
-
-{{ range .Objekte }}
 <div>
-    <h2 title="{{ .Id }}">{{ .Name }}</h2>
-    {{ if len .Probleme }} <h3>Es liegen Probleme vor!</h3> {{ end }}
-    <a href="/objekte/{{ .Id }}/">Öffnen</a>
+    <h2>Navigation</h2>
+    {{ if ne .Seite 1 }}
+        <a class="pure-button pure-button-primary" href="/objekte/{{ dec .Seite }}">Vorherige Seite</a>
+    {{ else }}
+        <a class="pure-button" disabled="">Vorherige Seite</a>
+    {{ end }}
+    Seite {{ .Seite }} von {{ .Seiten }}
+    {{ if ne .Seite .Seiten }}
+        <a class="pure-button pure-button-primary" href="/objekte/{{ inc .Seite }}/">Nächste Seite</a>
+    {{ else }}
+        <a class="pure-button" disabled="">Nächste Seite</a>
+    {{ end }}
+
     <br>
-    <a href="/objekte/{{ .Id }}/loeschen/">Löschen</a>
+    <label for="seite">Zu Seite </label>
+    <input id="seite" type="number" value="{{ .Seite }}" min="1" max="{{ .Seiten }}">
+    <a class="pure-button pure-button-primary" id="springen">springen</a>
+
+    <script>
+        var springen = document.getElementById("springen");
+        document.getElementById("seite").addEventListener("change", (e) => {
+            springen.href = "/objekte/" + e.target.value + "/";
+        });
+    </script>
 </div>
-{{ end }}
+
+<div>
+    <h2>Suche</h2>
+    <form class="pure-form-stacked" method="post" action="/objekte/suche/">
+        <label for="suche">Suchbegriff: </label>
+        <input type="text" id="suche" name="suche">
+        <button class="pure-button pure-button-primary" type="submit" value="Absenden">Suche starten</button>
+    </form>
+</div>
+
+<div>
+    <h2>Objekt hinzufügen</h2>
+    <form class="pure-form pure-form-stacked" action="/objekte/erstellen/" method="post">
+        <label for="name">Name: </label>
+        <input name="name" id="name" type="text">
+        <br>
+        <label for="raum">Raun: </label>
+        <input id="raum" name="raum" type="text">
+        <br>
+        <button class="pure-button pure-button-primary" type="submit">Absenden</button>
+    </form>
+</div>
+
+<div>
+    <h2>Objekte</h2>
+    {{ range .Objekte }}
+        <div>
+            <h3 title="{{ .Id }}">{{ .Name }}</h3>
+            {{ if len .Probleme }} <h4>Es liegen Probleme vor!</h4> {{ end }}
+            <a class="pure-button pure-button-primary" href="/objekt/{{ .Id }}/">Öffnen</a>
+            <a class="pure-button button-error" href="/objekt/{{ .Id }}/loeschen/">Löschen</a>
+        </div>
+    {{ end }}
+</div>
 
 </body>
 </html>

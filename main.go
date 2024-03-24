@@ -10,7 +10,6 @@ import (
 	"os"
 	"time"
 
-	"github.com/Lama06/Herder-Inventar/api"
 	"github.com/Lama06/Herder-Inventar/frontend"
 	"github.com/Lama06/Herder-Inventar/modell"
 )
@@ -82,21 +81,9 @@ func (s *server) backupData() {
 	}
 }
 
-func (s *server) initRoutes() (http.Handler, error) {
-	mux := http.NewServeMux()
-	mux.Handle("/api/", http.StripPrefix("/api", api.New(s.db)))
-	mux.Handle("/", frontend.New(s.db))
-	return mux, nil
-}
-
 func (s *server) start() error {
-	routes, err := s.initRoutes()
-	if err != nil {
-		return err
-	}
-
 	go s.backupData()
-	return http.ListenAndServe(":8080", routes)
+	return http.ListenAndServe(":8080", frontend.New(s.db))
 }
 
 func main() {

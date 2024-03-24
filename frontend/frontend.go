@@ -11,7 +11,10 @@ import (
 var (
 	//go:embed vorlagen/***
 	vorlagenDateien embed.FS
-	vorlage         = template.Must(template.ParseFS(vorlagenDateien, "vorlagen/***"))
+	vorlage         = template.Must(template.New("vorlagen").Funcs(map[string]any{
+		"inc": func(i int) int { return i + 1 },
+		"dec": func(i int) int { return i - 1 },
+	}).ParseFS(vorlagenDateien, "vorlagen/***"))
 )
 
 type kopfzeileVorlageDaten struct {
@@ -37,6 +40,7 @@ const (
 	ctxKeyObjekt
 	ctxKeyProblem
 	ctxKeyAccount
+	ctxKeySeite
 )
 
 func New(db *modell.Datenbank) http.Handler {
@@ -52,12 +56,15 @@ func New(db *modell.Datenbank) http.Handler {
 	mux.Handle("GET /accounts/{account}/loeschen/{$}", handleAccountLöschen(db))
 
 	mux.Handle("GET /objekte/{$}", handleInventarListe(db))
+	mux.Handle("GET /objekte/{seite}/{$}", handleInventarListe(db))
+	mux.Handle("POST /objekte/suche/{$}", handleObjekteSuchen(db))
 	mux.Handle("POST /objekte/erstellen/{$}", handleObjektErstellen(db))
-	mux.Handle("GET /objekte/{objekt}/{$}", handleObjekt(db))
-	mux.Handle("GET /objekte/{objekt}/loeschen/{$}", handleObjektLöschen(db))
-	mux.Handle("POST /objekte/{objekt}/bearbeiten/", handleObjektBearbeiten(db))
-	mux.Handle("POST /objekte/{objekt}/probleme/melden/{$}", handleProblemMelden(db))
-	mux.Handle("GET /objekte/{objekt}/probleme/{problem}/loesen/{$}", handleProblemLösen(db))
+
+	mux.Handle("GET /objekt/{objekt}/{$}", handleObjekt(db))
+	mux.Handle("GET /objekt/{objekt}/loeschen/{$}", handleObjektLöschen(db))
+	mux.Handle("POST /objekt/{objekt}/bearbeiten/", handleObjektBearbeiten(db))
+	mux.Handle("POST /objekt/{objekt}/probleme/melden/{$}", handleProblemMelden(db))
+	mux.Handle("GET /objekt/{objekt}/probleme/{problem}/loesen/{$}", handleProblemLösen(db))
 
 	return http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
 		db.Lock.Lock()
