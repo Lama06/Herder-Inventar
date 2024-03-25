@@ -1,28 +1,18 @@
 {{ define "kopfzeile" }}
-    <div class="pure-menu pure-menu-horizontal">
-        <ul class="pure-menu-list">
-            <li class="pure-menu-item">Herder Inventar</li>
+    <nav>
+        <ul>
+            <li>Herder Inventar</li>
             {{ if .Admin }}
-                <li class="pure-menu-item">
-                    <a href="/objekte/" class="pure-menu-link">Objekte</a>
-                </li>
-                <li class="pure-menu-item">
-                    <a href="/probleme/" class="pure-menu-link">Probleme</a>
-                </li>
-                <li class="pure-menu-item">
-                    <a href="/accounts/" class="pure-menu-link">Accounts</a>
-                </li>
+                <li><a href="/objekte/">Objekte</a></li>
+                <li><a href="/probleme/">Probleme</a></li>
+                <li><a href="/accounts/">Accounts</a></li>
             {{ end }}
             {{ if .Angemeldet }}
-                <li class="pure-menu-item">Account: {{ .Benutzername }}</li>
-                <li class="pure-menu-item">
-                    <a href="/abmelden/" class="pure-menu-link">Abmelden</a>
-                </li>
+                <li>Account: {{ .Benutzername }}</li>
+                <li><a href="/abmelden/">Abmelden</a></li>
             {{ else }}
-                <li class="pure-menu-item">
-                    <a href="/anmelden/" class="pure-menu-link">Anmelden</a>
-                </li>
+                <li><a href="/anmelden/">Anmelden</a></li>
             {{ end }}
         </ul>
-    </div>
+    </nav>
 {{ end }}

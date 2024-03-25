@@ -8,70 +8,87 @@
 </head>
 <body>
 
-{{ template "kopfzeile" . }}
+<header>
+    {{ template "kopfzeile" . }}
+    <h1>Inventar</h1>
+</header>
 
-<h1>Inventar</h1>
+<main>
+    {{ if .Seiten }}
+        <section>
+            <header>
+                <h2>Navigation</h2>
+            </header>
 
-<div>
-    <h2>Navigation</h2>
-    {{ if ne .Seite 1 }}
-        <a class="pure-button pure-button-primary" href="/objekte/{{ dec .Seite }}">Vorherige Seite</a>
-    {{ else }}
-        <a class="pure-button" disabled="">Vorherige Seite</a>
+            <aside>
+                <h3>Seite <u>{{ .Seite }}</u> von <u>{{ .Seiten }}</u></h3>
+                <br>
+                {{ if ne .Seite 1 }}
+                    <a href="/objekte/{{ dec .Seite }}"><b>Vorherige Seite!</b></a>
+                {{ else }}
+                    <a disabled=""><i>Vorherige Seite</i></a>
+                {{ end }}
+                {{ if ne .Seite .Seiten }}
+                    <a href="/objekte/{{ inc .Seite }}/"><b>Nächste Seite!</b></a>
+                {{ else }}
+                    <a disabled=""><i>Nächste Seite</i></a>
+                {{ end }}
+            </aside>
+            <form>
+                <h3>Teleportation</h3>
+
+                <label for="seite">Neue Seite</label>
+                <input id="seite" type="number" value="{{ .Seite }}" min="1" max="{{ .Seiten }}">
+                <a id="springen"><b>Springen!</b></a>
+
+                <script>
+                    var springen = document.getElementById("springen");
+                    document.getElementById("seite").addEventListener("change", (e) => {
+                        springen.href = "/objekte/" + e.target.value + "/";
+                    });
+                </script>
+            </form>
+        </section>
     {{ end }}
-    Seite {{ .Seite }} von {{ .Seiten }}
-    {{ if ne .Seite .Seiten }}
-        <a class="pure-button pure-button-primary" href="/objekte/{{ inc .Seite }}/">Nächste Seite</a>
-    {{ else }}
-        <a class="pure-button" disabled="">Nächste Seite</a>
-    {{ end }}
 
-    <br>
-    <label for="seite">Zu Seite </label>
-    <input id="seite" type="number" value="{{ .Seite }}" min="1" max="{{ .Seiten }}">
-    <a class="pure-button pure-button-primary" id="springen">springen</a>
+    <section>
+        <header>
+            <h2>Suche</h2>
+        </header>
+        <form method="post" action="/objekte/suche/">
+            <label for="suche">Suchbegriff: </label>
+            <input type="text" id="suche" name="suche">
+            <button type="submit" value="Absenden">Suche starten!</button>
+        </form>
+    </section>
 
-    <script>
-        var springen = document.getElementById("springen");
-        document.getElementById("seite").addEventListener("change", (e) => {
-            springen.href = "/objekte/" + e.target.value + "/";
-        });
-    </script>
-</div>
+    <section>
+        <header>
+            <h2>Objekt hinzufügen</h2>
+        </header>
+        <form action="/objekte/erstellen/" method="post">
+            <label for="name">Name: </label>
+            <input name="name" id="name" type="text">
+            <label for="raum">Raun: </label>
+            <input id="raum" name="raum" type="text">
+            <button type="submit">Absenden!</button>
+        </form>
+    </section>
 
-<div>
-    <h2>Suche</h2>
-    <form class="pure-form pure-form-stacked" method="post" action="/objekte/suche/">
-        <label for="suche">Suchbegriff: </label>
-        <input type="text" id="suche" name="suche">
-        <button class="pure-button pure-button-primary" type="submit" value="Absenden">Suche starten</button>
-    </form>
-</div>
-
-<div>
-    <h2>Objekt hinzufügen</h2>
-    <form class="pure-form pure-form-stacked" action="/objekte/erstellen/" method="post">
-        <label for="name">Name: </label>
-        <input name="name" id="name" type="text">
-        <br>
-        <label for="raum">Raun: </label>
-        <input id="raum" name="raum" type="text">
-        <br>
-        <button class="pure-button pure-button-primary" type="submit">Absenden</button>
-    </form>
-</div>
-
-<div>
-    <h2>Objekte</h2>
-    {{ range .Objekte }}
-        <div>
-            <h3 title="{{ .Id }}">{{ .Name }}</h3>
-            {{ if len .Probleme }} <h4>Es liegen Probleme vor!</h4> {{ end }}
-            <a class="pure-button pure-button-primary" href="/objekt/{{ .Id }}/">Öffnen</a>
-            <a class="pure-button button-error" href="/objekt/{{ .Id }}/loeschen/">Löschen</a>
-        </div>
-    {{ end }}
-</div>
+    <section>
+        <header>
+            <h2>Objekte</h2>
+        </header>
+        {{ range .Objekte }}
+            <aside>
+                <h3 title="{{ .Id }}">{{ .Name }}</h3>
+                {{ if len .Probleme }} <h4>Es liegen Probleme vor!</h4> {{ end }}
+                <a href="/objekt/{{ .Id }}/"><b>Öffnen!</b></a>
+                <a href="/objekt/{{ .Id }}/loeschen/"><i>Löschen!</i></a>
+            </aside>
+        {{ end }}
+    </section>
+</main>
 
 </body>
 </html>

@@ -8,70 +8,78 @@
 </head>
 <body>
 
-{{ template "kopfzeile" . }}
+<header>
+    {{ template "kopfzeile" . }}
+    <h1>Objekt: {{ .Obj.Name }}</h1>
+</header>
 
-<h1>Objekt: {{ .Obj.Name }}</h1>
+<main>
+    <section>
+        <header>
+            <h2>Informationen</h2>
+        </header>
+        Raum: {{ .Obj.Raum }}
+    </section>
 
-<div>
-    <h2>Informationen</h2>
-    Raum: {{ .Obj.Raum }}
-</div>
+    <section>
+        <header>
+            <h2>Bearbeiten</h2>
+        </header>
+        {{ if .Admin }}
+            <form method="post" action="/objekt/{{ .Obj.Id }}/bearbeiten/">
+                <label for="name">Name: </label>
+                <input id="name" name="name" type="text" value="{{ .Obj.Name }}">
 
-<div>
-    <h2>Bearbeiten</h2>
-    {{ if .Admin }}
-        <form class="pure-form pure-form-stacked" method="post" action="/objekt/{{ .Obj.Id }}/bearbeiten/">
-            <label for="name">Name: </label>
-            <input id="name" name="name" type="text" value="{{ .Obj.Name }}">
+                <label for="raum">Raum: </label>
+                <input id="raum" name="raum" type="text" value="{{ .Obj.Raum }}">
 
-            <label for="raum">Raum: </label>
-            <input id="raum" name="raum" type="text" value="{{ .Obj.Raum }}">
+                <button type="submit">Absenden</button>
 
-            <button class="pure-button pure-button-primary" type="submit">Absenden</button>
-        </form>
-        <br>
-        <a class="pure-button button-error" href="/objekt/{{ .Obj.Id }}/loeschen/">Objekt Löschen</a>
-    {{ else if .Angemeldet }}
-        Nur Admins sind dazu berechtigt, Objekte zu bearbeiten.
-    {{ else }}
-        Bitte melden Sie sich mit einem Admin-Account an, um Bearbeitungen vorzunehmen:
-        <a class="pure-button pure-button-primary" href="/anmelden/?weiterleitung=/objekt/{{ .Obj.Id }}/">Zu der Anmeldung</a>
-    {{ end }}
-</div>
+                <a href="/objekt/{{ .Obj.Id }}/loeschen/"><b>Objekt Löschen</b></a>
+            </form>
+        {{ else if .Angemeldet }}
+            Nur Admins sind dazu berechtigt, Objekte zu bearbeiten.
+        {{ else }}
+            <a href="/anmelden/?weiterleitung=/objekt/{{ .Obj.Id }}/"><b>Zu der Anmeldung</b></a>
+        {{ end }}
+    </section>
 
-<div>
-    <h2>Melden eines Problemes</h2>
-    {{ if .Angemeldet }}
-        Hinweis: Überprüfen Sie bitte unten, ob das Problem, das Sie melden wollen, bereits bekannt ist.
-        <form class="pure-form pure-form-stacked" method="post" action="/objekt/{{ .Obj.Id }}/probleme/melden/">
-            <label for="beschreibung">Beschreibung des Problemes:</label>
-            <textarea name="beschreibung" id="beschreibung"></textarea>
+    <section>
+        <header>
+            <h2>Melden eines Problemes</h2>
+        </header>
+        {{ if .Angemeldet }}
+            <form method="post" action="/objekt/{{ .Obj.Id }}/probleme/melden/">
+                <label for="beschreibung">Beschreibung des Problemes:</label>
+                <textarea name="beschreibung" id="beschreibung"></textarea>
 
-            <button class="pure-button pure-button-primary" type="submit">Absenden</button>
-        </form>
-    {{ else }}
-        Melden Sie sich bitte an, um ein Problem melden zu können.
-        <a class="pure-button pure-button-primary" href="/anmelden/?weiterleitung=/objekt/{{ .Obj.Id }}/">Zu der Anmeldung</a>
-    {{ end }}
-</div>
+                <button type="submit">Absenden</button>
+            </form>
+        {{ else }}
+            <a href="/anmelden/?weiterleitung=/objekt/{{ .Obj.Id }}/"><b>Zu der Anmeldung</b></a>
+        {{ end }}
+    </section>
 
-<div>
-    <h2>Bekannte Probleme</h2>
-    {{ range .Obj.Probleme }}
-        <div class="problem">
-            <h3 title="{{ .Id }}">Problem</h3>
-            Beschreibung: {{ .Beschreibung }}
-            <br>
-            Ersteller: {{ .Ersteller }}
-            <br>
-            Datum: {{ .Datum }}
-            {{ if $.Admin }}
+    <section>
+        <header>
+            <h2>Bekannte Probleme</h2>
+        </header>
+        {{ range .Obj.Probleme }}
+            <aside>
+                <h3 title="{{ .Id }}">Problem</h3>
+                Beschreibung: {{ .Beschreibung }}
                 <br>
-                <a class="pure-button pure-button-primary" href="/objekt/{{ $.Obj.Id }}/probleme/{{ .Id }}/loesen/">Problem lösen</a>
-            {{ end }}
-        </div>
-    {{ end }}
-</div>
+                Ersteller: {{ .Ersteller }}
+                <br>
+                Datum: {{ .Datum }}
+                {{ if $.Admin }}
+                    <br>
+                    <a href="/objekt/{{ $.Obj.Id }}/probleme/{{ .Id }}/loesen/"><b>Problem lösen</b></a>
+                {{ end }}
+            </aside>
+        {{ end }}
+    </section>
+</main>
 
 </body>
 </html>

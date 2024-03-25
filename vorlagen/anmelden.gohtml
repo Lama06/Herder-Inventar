@@ -7,30 +7,32 @@
     {{ template "bibliotheken" }}
 </head>
 <body>
+<header>
+    <h1>Anmelden</h1>
+</header>
+<main>
+    <section>
+        <form
+                action="/anmelden/{{ if .Weiterleitung }}?weiterleitung={{ .Weiterleitung }}{{ end }}"
+                method="post"
+        >
+            <label for="benutzername">Benutzername</label>
+            <input type="text" id="benutzername" name="benutzername" placeholder="Benutzername">
 
-<form
-        class="pure-form pure-form-stacked"
-        action="/anmelden/{{ if .Weiterleitung }}?weiterleitung={{ .Weiterleitung }}{{ end }}"
-        method="post"
->
-    <fieldset>
-        <legend>Anmelden</legend>
-        <label for="benutzername">Benutzername</label>
-        <input type="text" id="benutzername" name="benutzername" placeholder="Benutzername">
+            <label for="passwort">Passwort</label>
+            <input type="password" id="passwort" name="passwort" placeholder="Passwort">
 
-        <label for="passwort">Passwort</label>
-        <input type="password" id="passwort" name="passwort" placeholder="Passwort">
+            {{ if .Fehler }}
+                <span>
+            Die angegebenen Anmeldedaten sind inkorrekt. Bitte versuchen Sie es erneut.
+            Sollten Sie Ihr Passwort vergessen haben, wenden Sie sich bitte an einen Administrator.
+        </span>
+            {{ end }}
 
-        {{ if .Fehler }}
-            <span class="pure-form-message">
-                Die angegebenen Anmeldedaten sind inkorrekt. Bitte versuchen Sie es erneut.
-                Sollten Sie Ihr Passwort vergessen haben, wenden Sie sich bitte an einen Administrator.
-            </span>
-        {{ end }}
-
-        <button type="submit" class="pure-button pure-button-primary">Anmelden</button>
-    </fieldset>
-</form>
+            <button type="submit">Anmelden</button>
+        </form>
+    </section>
+</main>
 
 </body>
 </html>

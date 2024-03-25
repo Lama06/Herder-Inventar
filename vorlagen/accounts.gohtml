@@ -8,39 +8,51 @@
 </head>
 <body>
 
-{{ template "kopfzeile" . }}
+<header>
+    {{ template "kopfzeile" . }}
+    <h1>Accounts</h1>
+</header>
 
-<h1>Accounts</h1>
+<main>
+    <section>
+        <header>
+            <h2>Neuen Account registrieren</h2>
+        </header>
+        <form method="post" action="/accounts/registrieren/">
+            <label for="benutzername">Benutzername: </label>
+            <input name="benutzername" id="benutzername" type="text">
 
-<h2>Neuen Account registrieren</h2>
-<form class="pure-form pure-form-stacked" method="post" action="/accounts/registrieren/">
-    <label for="benutzername">Benutzername: </label>
-    <input name="benutzername" id="benutzername" type="text">
+            <label for="passwort">Passwort: </label>
+            <input id="passwort" name="passwort" type="text">
 
-    <label for="passwort">Passwort: </label>
-    <input id="passwort" name="passwort" type="text">
+            <label for="admin">Admin: </label>
+            <input id="admin" name="admin" type="checkbox">
 
-    <label for="admin">Admin: </label>
-    <input class="pure-checkbox" id="admin" name="admin" type="checkbox">
-
-    <button class="pure-button button-success" type="submit">Absenden</button>
-</form>
-
-{{ range .Accounts }}
-    <div>
-        <h2>{{ .Name }}</h2>
-        Admin: {{ if .Admin }} Ja {{ else }} Nein {{end}}
-        <br>
-        <a href="/accounts/{{ .Name }}/loeschen">Account löschen</a>
-        <h3>Passwort ändern:</h3>
-        <form class="pure-form pure-form-stacked" method="post" action="/accounts/{{ .Name }}/passwort_aendern/">
-            <label for="passwort-{{ .Name }}">Neues Passwort: </label>
-            <input id="passwort-{{ .Name }}" name="passwort" type="text">
-
-            <button class="pure-button button-success" type="submit">Absenden</button>
+            <br>
+            <button type="submit">Absenden</button>
         </form>
-    </div>
-{{ end }}
+    </section>
+
+    {{ range .Accounts }}
+        <section>
+            <header>
+                <h3>{{ .Name }}</h3>
+            </header>
+            <form method="post" action="/accounts/{{ .Name }}/passwort_aendern/">
+                <h4>Passwort ändern</h4>
+                <p>
+                    Admin: {{ if .Admin }} Ja {{ else }} Nein {{end}}
+                </p>
+                <label for="passwort-{{ .Name }}">Neues Passwort: </label>
+                <input id="passwort-{{ .Name }}" name="passwort" type="text">
+
+                <button type="submit">Absenden</button>
+                <a href="/accounts/{{ .Name }}/loeschen"><i>Account löschen</i></a>
+            </form>
+        </section>
+    {{ end }}
+</main>
+
 
 </body>
 </html>

@@ -8,32 +8,38 @@
 </head>
 <body>
 
-{{ template "kopfzeile" . }}
+<header>
+    {{ template "kopfzeile" . }}
+    <h1>Suche</h1>
+    <a href="/objekte/"><i>Suche schließen</i></a>
+</header>
 
-<h1>Suchergebnisse</h1>
+<main>
+    <section>
+        <header>
+            <h2>Erneut Suchen</h2>
+        </header>
+        <form method="post" action="/objekte/suche/">
+            <label for="suche">Suchbegriff</label>
+            <input type="text" id="suche" name="suche" value="{{ .Suche }}">
+            <button type="submit" value="Absenden">Suche starten</button>
+        </form>
+    </section>
 
-<a class="pure-button button-error" href="/objekte/">Suche schließen</a>
-
-<div>
-    <h2>Erneut Suchen</h2>
-    <form class="pure-form pure-form-stacked" method="post" action="/objekte/suche/">
-        <label for="suche">Suchbegriff: </label>
-        <input type="text" id="suche" name="suche" value="{{ .Suche }}">
-        <button class="pure-button pure-button-primary" type="submit" value="Absenden">Suche starten</button>
-    </form>
-</div>
-
-<div>
-    <h2>Objekte</h2>
-    {{ range .Objekte }}
-        <div>
-            <h3 title="{{ .Id }}">{{ .Name }}</h3>
-            {{ if len .Probleme }} <h4>Es liegen Probleme vor!</h4> {{ end }}
-            <a class="pure-button pure-button-primary" href="/objekt/{{ .Id }}/">Öffnen</a>
-            <a class="pure-button button-error" href="/objekt/{{ .Id }}/loeschen/">Löschen</a>
-        </div>
-    {{ end }}
-</div>
+    <section>
+        <header>
+            <h2>Ergebnisse</h2>
+        </header>
+        {{ range .Objekte }}
+            <aside>
+                <h3 title="{{ .Id }}">{{ .Name }}</h3>
+                {{ if len .Probleme }} <u>Es liegen Probleme vor!</u> {{ end }}
+                <a href="/objekt/{{ .Id }}/"><b>Öffnen</b></a>
+                <a href="/objekt/{{ .Id }}/loeschen/"><i>Löschen</i></a>
+            </aside>
+        {{ end }}
+    </section>
+</main>
 
 </body>
 </html>
