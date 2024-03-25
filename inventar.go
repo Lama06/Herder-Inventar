@@ -1,4 +1,4 @@
-package frontend
+package main
 
 import (
 	"bytes"
@@ -12,11 +12,9 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
-	"github.com/Lama06/Herder-Inventar/modell"
 )
 
-func requireObjekt(db *modell.Datenbank, pfadKomponente string, danach http.Handler) http.Handler {
+func requireObjekt(db *datenbank, pfadKomponente string, danach http.Handler) http.Handler {
 	return http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
 		idText := req.PathValue(pfadKomponente)
 		id, err := strconv.ParseInt(idText, 10, 32)
@@ -36,7 +34,7 @@ func requireObjekt(db *modell.Datenbank, pfadKomponente string, danach http.Hand
 
 func requireProblem(pfadKomponente string, danach http.Handler) http.Handler {
 	return http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
-		objekt := req.Context().Value(ctxKeyObjekt).(*modell.Objekt)
+		objekt := req.Context().Value(ctxKeyObjekt).(*objekt)
 		idText := req.PathValue(pfadKomponente)
 		id, err := strconv.ParseInt(idText, 10, 32)
 		if err != nil {
@@ -68,18 +66,18 @@ func requireSeite(pfadKomponente string, danach http.Handler) http.Handler {
 
 type inventarVorlageDaten struct {
 	kopfzeileVorlageDaten
-	Objekte       []*modell.Objekt
+	Objekte       []*objekt
 	Seite, Seiten int
 }
 
-func handleInventarListe(db *modell.Datenbank) http.Handler {
+func handleInventarListe(db *datenbank) http.Handler {
 	const objekteProSeite = 10
 
 	return requireSeite("seite", requireLogin(db, true, http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
 		seite := req.Context().Value(ctxKeySeite).(int)
-		benutzer := req.Context().Value(ctxKeyBenutzer).(*modell.Benutzer)
+		benutzer := req.Context().Value(ctxKeyBenutzer).(*benutzer)
 
-		objekte := make([]*modell.Objekt, 0, len(db.Objekte))
+		objekte := make([]*objekt, 0, len(db.Objekte))
 		for _, objekt := range db.Objekte {
 			objekte = append(objekte, objekt)
 		}
@@ -118,12 +116,12 @@ func handleInventarListe(db *modell.Datenbank) http.Handler {
 type suchenVorlageDaten struct {
 	kopfzeileVorlageDaten
 	Suche   string
-	Objekte []*modell.Objekt
+	Objekte []*objekt
 }
 
-func handleObjekteSuchen(db *modell.Datenbank) http.Handler {
+func handleObjekteSuchen(db *datenbank) http.Handler {
 	return requireLogin(db, true, http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
-		benutzer := req.Context().Value(ctxKeyBenutzer).(*modell.Benutzer)
+		benutzer := req.Context().Value(ctxKeyBenutzer).(*benutzer)
 
 		err := req.ParseForm()
 		if err != nil {
@@ -133,7 +131,7 @@ func handleObjekteSuchen(db *modell.Datenbank) http.Handler {
 		suche := req.Form.Get("suche")
 		sucheKlein := strings.ToLower(suche)
 
-		var ergebnisse []*modell.Objekt
+		var ergebnisse []*objekt
 		for _, objekt := range db.Objekte {
 			nameKlein := strings.ToLower(objekt.Name)
 			if strings.Contains(nameKlein, sucheKlein) {
@@ -159,7 +157,7 @@ func handleObjekteSuchen(db *modell.Datenbank) http.Handler {
 	}))
 }
 
-func handleObjektErstellen(db *modell.Datenbank) http.Handler {
+func handleObjektErstellen(db *datenbank) http.Handler {
 	return requireLogin(db, true, http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
 		err := req.ParseForm()
 		if err != nil {
@@ -167,7 +165,7 @@ func handleObjektErstellen(db *modell.Datenbank) http.Handler {
 			return
 		}
 		id := rand.Int32()
-		obj := modell.Objekt{
+		obj := objekt{
 			Id:       id,
 			Name:     req.Form.Get("name"),
 			Raum:     req.Form.Get("raum"),
@@ -178,12 +176,12 @@ func handleObjektErstellen(db *modell.Datenbank) http.Handler {
 	}))
 }
 
-func handleObjektLöschen(db *modell.Datenbank) http.Handler {
+func handleObjektLöschen(db *datenbank) http.Handler {
 	return requireLogin(
 		db,
 		true,
 		requireObjekt(db, "objekt", http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
-			obj := req.Context().Value(ctxKeyObjekt).(*modell.Objekt)
+			obj := req.Context().Value(ctxKeyObjekt).(*objekt)
 			delete(db.Objekte, obj.Id)
 			http.Redirect(res, req, "/objekte/", http.StatusFound)
 		})),
@@ -192,13 +190,13 @@ func handleObjektLöschen(db *modell.Datenbank) http.Handler {
 
 type objektVorlageDaten struct {
 	kopfzeileVorlageDaten
-	Obj *modell.Objekt
+	Obj *objekt
 }
 
-func handleObjekt(db *modell.Datenbank) http.Handler {
+func handleObjekt(db *datenbank) http.Handler {
 	return requireLoginWeich(db, requireObjekt(db, "objekt", http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
-		benutzer, _ := req.Context().Value(ctxKeyBenutzer).(*modell.Benutzer)
-		obj := req.Context().Value(ctxKeyObjekt).(*modell.Objekt)
+		benutzer, _ := req.Context().Value(ctxKeyBenutzer).(*benutzer)
+		obj := req.Context().Value(ctxKeyObjekt).(*objekt)
 		var antwort bytes.Buffer
 		err := vorlage.ExecuteTemplate(&antwort, "objekt", objektVorlageDaten{
 			kopfzeileVorlageDaten: newKopfzeileVorlageDaten(benutzer),
@@ -213,11 +211,11 @@ func handleObjekt(db *modell.Datenbank) http.Handler {
 	})))
 }
 
-func handleObjektBearbeiten(db *modell.Datenbank) http.Handler {
+func handleObjektBearbeiten(db *datenbank) http.Handler {
 	return requireLogin(
 		db, true,
 		requireObjekt(db, "objekt", http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
-			obj := req.Context().Value(ctxKeyObjekt).(*modell.Objekt)
+			obj := req.Context().Value(ctxKeyObjekt).(*objekt)
 			err := req.ParseForm()
 			if err != nil || !req.Form.Has("name") || !req.Form.Has("raum") {
 				res.WriteHeader(http.StatusBadRequest)
@@ -231,12 +229,12 @@ func handleObjektBearbeiten(db *modell.Datenbank) http.Handler {
 	)
 }
 
-func handleProblemMelden(db *modell.Datenbank) http.Handler {
+func handleProblemMelden(db *datenbank) http.Handler {
 	return requireLogin(
 		db, false,
 		requireObjekt(db, "objekt", http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
-			benutzer := req.Context().Value(ctxKeyBenutzer).(*modell.Benutzer)
-			obj := req.Context().Value(ctxKeyObjekt).(*modell.Objekt)
+			benutzer := req.Context().Value(ctxKeyBenutzer).(*benutzer)
+			obj := req.Context().Value(ctxKeyObjekt).(*objekt)
 
 			err := req.ParseForm()
 			if err != nil {
@@ -247,9 +245,9 @@ func handleProblemMelden(db *modell.Datenbank) http.Handler {
 
 			problemId := rand.Int32()
 			if obj.Probleme == nil {
-				obj.Probleme = make(map[int32]*modell.Problem)
+				obj.Probleme = make(map[int32]*problem)
 			}
-			obj.Probleme[problemId] = &modell.Problem{
+			obj.Probleme[problemId] = &problem{
 				Id:           problemId,
 				Ersteller:    benutzer.Name,
 				Datum:        time.Now(),
@@ -262,17 +260,52 @@ func handleProblemMelden(db *modell.Datenbank) http.Handler {
 	)
 }
 
-func handleProblemLösen(db *modell.Datenbank) http.Handler {
+func handleProblemLösen(db *datenbank) http.Handler {
 	return requireLogin(
 		db, false,
 		requireObjekt(db, "objekt", requireProblem(
 			"problem",
 			http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
-				obj := req.Context().Value(ctxKeyObjekt).(*modell.Objekt)
-				problem := req.Context().Value(ctxKeyProblem).(*modell.Problem)
+				obj := req.Context().Value(ctxKeyObjekt).(*objekt)
+				problem := req.Context().Value(ctxKeyProblem).(*problem)
 				delete(obj.Probleme, problem.Id)
 				http.Redirect(res, req, fmt.Sprintf("/objekt/%v/", obj.Id), http.StatusFound)
 			}),
 		)),
 	)
+}
+
+type problemListeEintrag struct {
+	Problem *problem
+	Obj     *objekt
+}
+
+type problemListeVorlageDaten struct {
+	kopfzeileVorlageDaten
+	Probleme []problemListeEintrag
+}
+
+func handleProblemListe(db *datenbank) http.Handler {
+	return requireLogin(db, true, http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
+		benutzer := req.Context().Value(ctxKeyBenutzer).(*benutzer)
+
+		var probleme []problemListeEintrag
+		for _, obj := range db.Objekte {
+			for _, problem := range obj.Probleme {
+				probleme = append(probleme, problemListeEintrag{Problem: problem, Obj: obj})
+			}
+		}
+
+		var antwort bytes.Buffer
+		err := vorlage.ExecuteTemplate(&antwort, "probleme", problemListeVorlageDaten{
+			kopfzeileVorlageDaten: newKopfzeileVorlageDaten(benutzer),
+			Probleme:              probleme,
+		})
+		if err != nil {
+			log.Println(err)
+			res.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		_, _ = antwort.WriteTo(res)
+	}))
 }

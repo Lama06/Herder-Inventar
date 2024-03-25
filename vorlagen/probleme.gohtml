@@ -1,0 +1,38 @@
+{{ define "probleme" }}
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Probleme</title>
+
+        {{ template "bibliotheken" }}
+    </head>
+    <body>
+
+    {{ template "kopfzeile" . }}
+
+    <h1>Probleme</h1>
+
+    <table class="pure-table pure-table-horizontal">
+        <thead>
+        <th>Objekt</th>
+        <th>Raum</th>
+        <th>Ersteller</th>
+        <th>Datum</th>
+        <th>Beschreibung</th>
+        </thead>
+        <tbody>
+        {{ range .Probleme }}
+            <tr>
+                <td title="{{ .Obj.Id }}"><a class="pure-button pure-button-primary" href="/objekt/{{ .Obj.Id }}/">{{ .Obj.Name }}</a></td>
+                <td>{{ .Obj.Raum }}</td>
+                <td>{{ .Problem.Ersteller }}</td>
+                <td>{{ .Problem.Datum }}</td>
+                <td>{{ .Problem.Beschreibung }}</td>
+            </tr>
+        {{ end }}
+        </tbody>
+    </table>
+
+    </body>
+    </html>
+{{ end }}

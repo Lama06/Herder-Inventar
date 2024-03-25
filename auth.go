@@ -1,17 +1,51 @@
-package frontend
+package main
 
 import (
 	"bytes"
 	"context"
+	"crypto/rand"
 	"crypto/sha256"
 	_ "embed"
+	"fmt"
 	"log"
+	"math/big"
 	"net/http"
 	"time"
-
-	"github.com/Lama06/Herder-Inventar/auth"
-	"github.com/Lama06/Herder-Inventar/modell"
 )
+
+const sitzungDauer = 30 * time.Minute
+
+func generateSchlüssel() (string, error) {
+	const länge = 64
+	const buchstaben = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890"
+	var schlüssel [länge]byte
+	for i := range schlüssel {
+		index, err := rand.Int(rand.Reader, big.NewInt(int64(len(buchstaben))))
+		if err != nil {
+			return "", fmt.Errorf("failed to generate random number: %w", err)
+		}
+		schlüssel[i] = buchstaben[index.Int64()]
+	}
+	return string(schlüssel[:]), nil
+}
+
+func sitzungSanduhr(db *datenbank, schlüssel string) {
+	for {
+		time.Sleep(sitzungDauer)
+		db.lock.Lock()
+		sitzung, ok := db.Sitzungen[schlüssel]
+		if !ok {
+			db.lock.Unlock()
+			return
+		}
+		if time.Now().Sub(sitzung.LetzerZugriff) > sitzungDauer {
+			delete(db.Sitzungen, schlüssel)
+			db.lock.Unlock()
+			return
+		}
+		db.lock.Unlock()
+	}
+}
 
 type anmeldenVorlageDaten struct {
 	Fehler        bool
@@ -40,7 +74,7 @@ func handleAnmeldenGet() http.Handler {
 	})
 }
 
-func handleAnmeldenPost(db *modell.Datenbank) http.Handler {
+func handleAnmeldenPost(db *datenbank) http.Handler {
 	return http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
 		err := req.ParseForm()
 		if err != nil {
@@ -60,26 +94,26 @@ func handleAnmeldenPost(db *modell.Datenbank) http.Handler {
 			return
 		}
 
-		schlüssel, err := auth.GenerateSchlüssel()
+		schlüssel, err := generateSchlüssel()
 		if err != nil {
 			log.Println(err)
 			res.WriteHeader(http.StatusInternalServerError)
 			return
 		}
-		db.Sitzungen[schlüssel] = &modell.Sitzung{
+		db.Sitzungen[schlüssel] = &sitzung{
 			Schlüssel:     schlüssel,
 			Benutzer:      benutzername,
 			LetzerZugriff: time.Now(),
 		}
-		go auth.SitzungSanduhr(db, schlüssel)
+		go sitzungSanduhr(db, schlüssel)
 
 		http.SetCookie(res, &http.Cookie{
 			Name:     "schluessel",
 			Value:    schlüssel,
 			Path:     "/",
-			MaxAge:   int(auth.SitzungDauer.Seconds()),
+			MaxAge:   int(sitzungDauer.Seconds()),
 			Secure:   true,
-			HttpOnly: false,
+			HttpOnly: true,
 			SameSite: http.SameSiteStrictMode,
 		})
 		if req.Form.Has("weiterleitung") {
@@ -90,9 +124,9 @@ func handleAnmeldenPost(db *modell.Datenbank) http.Handler {
 	})
 }
 
-func handleAbmelden(db *modell.Datenbank) http.Handler {
+func handleAbmelden(db *datenbank) http.Handler {
 	return requireLogin(db, false, http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
-		benutzer := req.Context().Value(ctxKeyBenutzer).(*modell.Benutzer)
+		benutzer := req.Context().Value(ctxKeyBenutzer).(*benutzer)
 		for schlüssel, sitzung := range db.Sitzungen {
 			if sitzung.Benutzer == benutzer.Name {
 				delete(db.Sitzungen, schlüssel)
@@ -103,7 +137,7 @@ func handleAbmelden(db *modell.Datenbank) http.Handler {
 }
 
 func requireLogin(
-	db *modell.Datenbank, admin bool,
+	db *datenbank, admin bool,
 	danach http.Handler,
 ) http.Handler {
 	return http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
@@ -133,7 +167,7 @@ func requireLogin(
 	})
 }
 
-func requireLoginWeich(db *modell.Datenbank, danach http.Handler) http.Handler {
+func requireLoginWeich(db *datenbank, danach http.Handler) http.Handler {
 	return http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
 		schlüsselKeks, err := req.Cookie("schluessel")
 		if err != nil {
@@ -155,7 +189,7 @@ func requireLoginWeich(db *modell.Datenbank, danach http.Handler) http.Handler {
 	})
 }
 
-func requireAccount(db *modell.Datenbank, pfadKomponente string, danach http.Handler) http.Handler {
+func requireAccount(db *datenbank, pfadKomponente string, danach http.Handler) http.Handler {
 	return http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
 		benutzername := req.PathValue(pfadKomponente)
 		benutzer, ok := db.Accounts[benutzername]
@@ -170,12 +204,12 @@ func requireAccount(db *modell.Datenbank, pfadKomponente string, danach http.Han
 
 type accountsVorlageDaten struct {
 	kopfzeileVorlageDaten
-	Accounts map[string]*modell.Benutzer
+	Accounts map[string]*benutzer
 }
 
-func handleAccounts(db *modell.Datenbank) http.Handler {
+func handleAccounts(db *datenbank) http.Handler {
 	return requireLogin(db, true, http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
-		benutzer := req.Context().Value(ctxKeyBenutzer).(*modell.Benutzer)
+		benutzer := req.Context().Value(ctxKeyBenutzer).(*benutzer)
 		var antwort bytes.Buffer
 		err := vorlage.ExecuteTemplate(&antwort, "accounts", accountsVorlageDaten{
 			kopfzeileVorlageDaten: newKopfzeileVorlageDaten(benutzer),
@@ -190,7 +224,7 @@ func handleAccounts(db *modell.Datenbank) http.Handler {
 	}))
 }
 
-func handleAccountRegistrieren(db *modell.Datenbank) http.Handler {
+func handleAccountRegistrieren(db *datenbank) http.Handler {
 	return requireLogin(db, true, http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
 		err := req.ParseForm()
 		if err != nil || !req.Form.Has("benutzername") || !req.Form.Has("passwort") {
@@ -204,7 +238,7 @@ func handleAccountRegistrieren(db *modell.Datenbank) http.Handler {
 			res.WriteHeader(http.StatusBadRequest)
 			return
 		}
-		acc := modell.Benutzer{
+		acc := benutzer{
 			Name:     benutzername,
 			Admin:    admin,
 			Passwort: sha256.Sum256([]byte(passwort)),
@@ -214,18 +248,18 @@ func handleAccountRegistrieren(db *modell.Datenbank) http.Handler {
 	}))
 }
 
-func handleAccountLöschen(db *modell.Datenbank) http.Handler {
+func handleAccountLöschen(db *datenbank) http.Handler {
 	return requireLogin(
 		db, true,
 		requireAccount(db, "account", http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
-			account := req.Context().Value(ctxKeyAccount).(*modell.Benutzer)
+			account := req.Context().Value(ctxKeyAccount).(*benutzer)
 			delete(db.Accounts, account.Name)
 			http.Redirect(res, req, "/accounts/", http.StatusFound)
 		})),
 	)
 }
 
-func handlePasswortÄndern(db *modell.Datenbank) http.Handler {
+func handlePasswortÄndern(db *datenbank) http.Handler {
 	return requireLogin(
 		db, true,
 		requireAccount(db, "account", http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
@@ -236,7 +270,7 @@ func handlePasswortÄndern(db *modell.Datenbank) http.Handler {
 			}
 			passwort := req.Form.Get("passwort")
 
-			account := req.Context().Value(ctxKeyAccount).(*modell.Benutzer)
+			account := req.Context().Value(ctxKeyAccount).(*benutzer)
 			account.Passwort = sha256.Sum256([]byte(passwort))
 			http.Redirect(res, req, "/accounts/", http.StatusFound)
 		})),
